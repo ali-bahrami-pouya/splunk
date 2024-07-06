@@ -1,0 +1,6 @@
+index=suricata 
+| stats values(payload_printable) as Payload values(alert.signature) AS Signature count by src_ip dest_ip
+| mispsearch misp_instance="misp" field="src_ip" field="dest_ip"
+| eval MISP_Status=if(isnull(misp_type), "NON_Exist", "Exist") 
+| fields - misp_type misp_value misp_to_ids misp_comment misp_tag misp_attribute_uuid misp_event_id misp_event_uuid misp_orgc_id 
+| sort + MISP_Status - count
