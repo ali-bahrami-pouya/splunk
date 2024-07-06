@@ -1,0 +1,18 @@
+You can add these usecases on your ES 
+to detect NTDS dumping
+
+***Detect by process creation(sysmon ID:1 , windows ID:4688 & powershell ID:800)***
+| tstats count from datamodel=Endpoint.Processes where (Processes.CommandLine="*ntds*"
+Processes.CommandLine="*create*") OR (Processes.CommandLine="vssadmin"
+Processes.CommandLine="create" Processes.CommandLine="shadow") by host Processes.user
+Processes.process Processes.CommandLine Processes.ParentCommandLine
+
+***Detect by A Handle and be performed on NTDS***
+index=windows (EventCode=4663 OR EventCode=4656) file_name="ntds.dit"
+| stats count by host Account_Name Logon_ID file_path process process_id
+
+***Detect to Export the ntds.dit by DCOM protocol***
+index=windows EventCode=4662
+| rex field=Message "Properties\:\s+(?<Properties_rex>[\s\S]+)Additional Information\:"
+| search Properties_rex="*1131f6aa-9c07-11d1-f79f-00c04fc2dcd2*"
+| stats count by host Account_Name Logon_ID Object_Name Properties_rex
