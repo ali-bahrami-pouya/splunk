@@ -1,0 +1,9 @@
+index=waf 
+| eval Target=dst."/".http_host 
+| fillnull value="NULL" 
+| stats values(Target) as Target values(attack_type) as Attack_Type count by src 
+| rename src as ip 
+| mispsearch misp_instance="misp" field="ip" 
+| eval MISP_Status=if(isnull(misp_type), "NON_Exist", "Exist") 
+| fields - misp_type misp_value misp_to_ids misp_comment misp_tag misp_attribute_uuid misp_event_id misp_event_uuid misp_orgc_id 
+| sort + MISP_Status - count
